@@ -4,6 +4,7 @@ var dragOrientation = "";
 var dragCorner = "";
 var draggedCell;
 var createdChild;
+var startingSize;
 
 Array.max = function( array ){
     return Math.max.apply( Math, array );
@@ -20,13 +21,14 @@ function Cell(root, parent) {
 
     var color = "rgb("+Math.round(Math.random()*255)+","+Math.round(Math.random()*255)+","+Math.round(Math.random()*255)+")";
     this.element.style.backgroundColor = color;
+    //this.element.style.overflow = "hidden";
 
     if(parent == null){
         this.element.style.width = this.root.offsetWidth.toString() + "px";
         this.element.style.height = this.root.offsetHeight.toString() + "px";
     } else {
-        this.element.style.width = parent.element.offsetWidth.toString() + "px";
-        this.element.style.height= parent.element.offsetHeight.toString() + "px";
+        this.element.style.width = "100px";//parent.element.offsetWidth.toString() + "px";
+        this.element.style.height= this.root.offsetHeight.toString() + "px";//parent.element.offsetHeight.toString() + "px";
     }
 
 
@@ -41,9 +43,10 @@ function Cell(root, parent) {
 Cell.prototype.addPullTabs = function(){
     this.pullTabNE = document.createElement("img");
     this.pullTabNE.src = "images/pull_tab_ne.png";
-    this.pullTabNE.style.position = "absolute";
-    this.pullTabNE.style.top = "0pt";
-    this.pullTabNE.style.left = ((this.element.offsetLeft + this.element.offsetWidth) - 16) + "px";
+    this.pullTabNE.style.position = "relative";
+    this.pullTabNE.style.top = "0px";
+    //this.pullTabNE.style.left = ((this.element.offsetLeft + this.element.offsetWidth) - 16) + "px";
+    this.pullTabNE.style.float = "right";
     this.pullTabNE.height = "16";
     this.pullTabNE.width = "16";
     this.pullTabNE.style.cursor = "crosshair";
@@ -52,11 +55,11 @@ Cell.prototype.addPullTabs = function(){
     
     this.pullTabSW = document.createElement("img");
     this.pullTabSW.src = "images/pull_tab_sw.png";
-    this.pullTabSW.style.position = "absolute";
-    this.pullTabSW.style.left = "0pt";
-    this.pullTabSW.style.top = ((this.element.offsetTop + this.element.offsetHeight) - 16)+"pt";
+    this.pullTabSW.style.position = "relative";
+    this.pullTabSW.style.left = "0px";
     this.pullTabSW.height = "16";
     this.pullTabSW.width = "16";
+    this.pullTabSW.style.top = ((this.element.offsetTop + this.element.offsetHeight) - 16)+"px";
     this.pullTabSW.style.cursor = "crosshair";
     this.pullTabSW.style.zIndex = "10";
     this.element.appendChild(this.pullTabSW);
@@ -73,6 +76,8 @@ Cell.prototype.addListeners = function(){
         startingPos = [e.pageX, e.pageY];
         dragCorner = "NE";
         draggedCell = scope;
+        startingSize = {"x": draggedCell.element.offsetLeft, "y": draggedCell.element.offsetTop, "w": draggedCell.element.offsetWidth, "h": draggedCell.element.offsetHeight}
+        console.log(startingSize);
     };
 
     this.pullTabSW.onmousedown = function(e){
@@ -96,8 +101,6 @@ Cell.prototype.addListeners = function(){
                     if((startingPos[0] - e.pageX) > 0) {                    //Dragging cursor left
                         if(dragCorner == "NE"){                             //Dragged from NE
                             console.log("Create div left!");
-
-                            console.log(draggedCell);
                             draggedCell.createChild();
 
                         } else if (dragCorner == "SW"){                     //Dragged from SW
@@ -134,14 +137,18 @@ Cell.prototype.addListeners = function(){
         if(createdChild){
             if(dragOrientation == "horizontal"){
 
-                //draggedCell.element.style.width = (e.pageX - parseInt(draggedCell.element.style.left).toString()) + "%";
-                draggedCell.element.style.width = "50%";
+                draggedCell.element.style.width = (e.pageX - draggedCell.element.offsetLeft) + "px";
+                //draggedCell.element.style.width = "50%";
 
-                createdChild.element.style.width = "100px";
-                createdChild.element.style.height = "100px";
-                createdChild.element.style.backgroundColor = "#FFFF00";
+                var draggedCellEdge = (draggedCell.element.offsetLeft + draggedCell.element.offsetWidth);
+                var origEdge = startingSize["x"] + startingSize["w"];
+                var newWidth = origEdge - draggedCellEdge;
+
+                createdChild.element.style.width = newWidth + "px";
+                createdChild.element.style.height = startingSize["h"] + "px";
+                //createdChild.element.style.backgroundColor = color;
                 createdChild.element.style.top = "0px";
-                createdChild.element.style.left = e.pageX.toString()+"px";
+                createdChild.element.style.left = draggedCellEdge+"px";
             }
         }
     };
